@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helper Primitives for Secure Access
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity validation schema
+    function isValidMeeting(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.date is string && data.date.size() <= 100
+        && data.attendees is list && data.attendees.size() <= 100
+        && data.transcript is list && data.transcript.size() <= 2000
+        && (!('aiSummary' in data) || (data.aiSummary is string && data.aiSummary.size() <= 100000))
+        && data.ownerId is string && data.ownerId == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Meetings collection rules matching Phase 4 guidelines
+    match /meetings/{meetingId} {
+      allow get: if isSignedIn() && existing().ownerId == request.auth.uid;
+      
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      allow create: if isEmailVerified() 
+        && isValidId(meetingId)
+        && isValidMeeting(incoming())
+        && request.resource.id == meetingId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isEmailVerified()
+        && isValidId(meetingId)
+        && isValidMeeting(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Edit Transcript, Save Summary, or Rename Title
+          incoming().diff(existing()).affectedKeys().hasAny(['title', 'attendees', 'transcript', 'aiSummary', 'updatedAt'])
+        );
+
+      allow delete: if isSignedIn() && existing().ownerId == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"name":"대모산 호텔 실시간 AI 회의록 시스템","description":"Web Speech API와 Gemini AI 기술을 활용해 실시간으로 화자별 회의 기록을 작성하고 AI 요약을 제공하는 사내 서비스","requestFramePermissions":["microphone"],"majorCapabilities":["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]}

@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "Attendee": {
+      "title": "Attendee",
+      "description": "An individual participating in a meeting.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique attendee identifier inside the meeting" },
+        "name": { "type": "string", "description": "Display name of the attendee" },
+        "color": { "type": "string", "description": "Tailwind color name assigned to the attendee" }
+      },
+      "required": ["id", "name", "color"]
+    },
+    "TimelineItem": {
+      "title": "TimelineItem",
+      "description": "A single spoken statement in the meeting transcript timeline.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique timeline statement identifier" },
+        "timestamp": { "type": "string", "description": "Wall clock timestamp (e.g. HH:MM:SS)" },
+        "relativeTime": { "type": "string", "description": "Relative time elapsed since meeting start (e.g. MM:SS)" },
+        "speakerId": { "type": "string", "description": "The attendee ID of the speaker" },
+        "text": { "type": "string", "description": "The recognized spoken transcript text" }
+      },
+      "required": ["id", "timestamp", "relativeTime", "speakerId", "text"]
+    },
+    "Meeting": {
+      "title": "Meeting",
+      "description": "A complete logged meeting with attendees, real-time speech-to-text transcript, and AI summary.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique automatic meeting document ID" },
+        "title": { "type": "string", "description": "Meeting subject or title" },
+        "date": { "type": "string", "description": "Localized date string of meeting" },
+        "attendees": { "type": "array", "description": "List of attendees participating in this meeting" },
+        "transcript": { "type": "array", "description": "The chronologically recorded spoken statements" },
+        "aiSummary": { "type": "string", "description": "The AI generated summary or action items list" },
+        "ownerId": { "type": "string", "description": "The Firebase Auth user UID who registered the meeting" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last save" }
+      },
+      "required": ["id", "title", "date", "attendees", "transcript", "ownerId", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/meetings/{meetingId}": {
+      "schema": "Meeting",
+      "description": "User created meetings collection containing speech to text recordings, attendees, and summaries."
+    }
+  }
+}
